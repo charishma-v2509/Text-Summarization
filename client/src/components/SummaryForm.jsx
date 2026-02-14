@@ -4,7 +4,6 @@ import "./SummaryForm.css";
 function SummaryForm({ darkMode }) {
   const [text, setText] = useState("");
   const [mode, setMode] = useState("medium");
-  const [bulletPoints, setBulletPoints] = useState(false);
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,29 +20,31 @@ function SummaryForm({ darkMode }) {
 
     setError("");
     setLoading(true);
-    
+
     try {
-      const response = await fetch("http://localhost:5000/api/summarize", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ text, mode, bullet_points: bulletPoints }),
-      });
+      const response = await fetch(
+        "https://text-summarizer-api-kydf.onrender.com/api/summarize",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ text, mode }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to summarize text");
       }
 
       const data = await response.json();
-      
-      // Fix encoding issues
+
       let cleanedSummary = data.summary
-        .replace(/â€TM/g, "'")  // Fix common encoding issues
-        .replace(/â€œ/g, '"')   // Fix left double quote
-        .replace(/â€/g, '"')    // Fix right double quote
-        .replace(/â€™/g, "'");  // Fix apostrophe
+        .replace(/â€TM/g, "'")
+        .replace(/â€œ/g, '"')
+        .replace(/â€/g, '"')
+        .replace(/â€™/g, "'");
 
       setSummary(cleanedSummary);
     } catch (err) {
@@ -55,23 +56,14 @@ function SummaryForm({ darkMode }) {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(summary)
+    navigator.clipboard
+      .writeText(summary)
       .then(() => {
         alert("Summary copied to clipboard!");
       })
       .catch(() => {
         alert("Failed to copy summary");
       });
-  };
-
-  const formatBulletPoints = (text) => {
-    return text.split('\n')
-      .filter(line => line.trim() !== '')
-      .map((line, index) => (
-        <div key={index} className="bullet-point">
-          • {line.trim()}
-        </div>
-      ));
   };
 
   return (
@@ -90,8 +82,8 @@ function SummaryForm({ darkMode }) {
       <div className="controls">
         <div className="control-group">
           <label>Summary Length:</label>
-          <select 
-            value={mode} 
+          <select
+            value={mode}
             onChange={(e) => setMode(e.target.value)}
             className="select-input"
           >
@@ -101,20 +93,8 @@ function SummaryForm({ darkMode }) {
           </select>
         </div>
 
-        <div className="control-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={bulletPoints}
-              onChange={(e) => setBulletPoints(e.target.checked)}
-              className="checkbox-input"
-            />
-            <span>Bullet Points</span>
-          </label>
-        </div>
-
-        <button 
-          onClick={handleSummarize} 
+        <button
+          onClick={handleSummarize}
           disabled={loading || text.length < 100}
           className="submit-btn"
         >
@@ -132,9 +112,7 @@ function SummaryForm({ darkMode }) {
               Copy
             </button>
           </div>
-          <div className="summary-output">
-            {bulletPoints ? formatBulletPoints(summary) : summary}
-          </div>
+          <div className="summary-output">{summary}</div>
         </div>
       )}
     </div>
